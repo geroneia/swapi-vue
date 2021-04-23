@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SEARCH VUE</title>
+    <link rel="stylesheet" href="css/materialize.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/search.css">
+</head>
+
+<body>
+
+    <div id="search" @click="showViewed = false">
+
+        <a class="viewed-btn btn-floating waves-effect" v-on:click.stop="showViewed = !showViewed">
+            <i class="material-icons">turned_in_not</i>
+        </a>
+
+        <div class="viewed-menu card" v-if=showViewed @click.stop="">
+            <!-- Заглушка -->
+            <ul v-if="viewedFilms.length>0">
+                <li v-for="(film, i) in viewedFilms">
+                    <span>{{++i}}. {{film.title}}</span>
+                    <a class="btn btn-small" @click.stop="deleteFilm(film)">удалить</a>
+                </li>
+            </ul>
+            <span v-else>У вас нет просмотренных фильмов</span>
+        </div>
+
+        <!-- <div class="viewed-menu card" v-else-if="!showViewed">
+            Директивы условной отрисовки
+            hello
+        </div>
+
+        <div class="viewed-menu card" v-else>
+            bye
+        </div> -->
+
+        <h5>{{header}}</h5>
+
+        <div id="search-console">
+            <input type="text" id="search-input" style="color: #595959" v-model.trim="request" @focus="request = ''">
+            <!-- см. двусторонний байндинг -->
+            <!-- Директивы нужны для совершения действий с DOM -->
+            <!-- Модификатор .trim удаляет лишние пробелы -->
+        </div>
+
+        <div class="card film-card" v-for="(film, i) in filteredFilms" v-bind:id="i">
+            <p>{{++i}}. {{film.title}}</p>
+            <a class="btn waves-effect" @click.stop="addFilmToViewed(film)">Добавить в просмотренное</a>
+            <!-- Запись через @ - аналог v-on:click -->
+        </div>
+
+    </div>
+
+
+    <script src="https://unpkg.com/vue"></script>
+
+    <script>
+        let initHeader = "То, что ищешь ты введи...";
+
+        let vm = new Vue({
+            el: "#search",
+            data: {
+                request: initHeader,
+                films: [],
+                showViewed: false,
+                viewedFilms: [],
+            },
+            computed: {
+                header() {
+                    return this.request === "" || this.request === initHeader ? "Ничего не ищем" :
+                        `Ищем: ${this.request.toUpperCase()}`;
+                },
+                 filteredFilms() {
+                    console.log(this.request)
+
+                    if (this.request !== initHeader && this.request !== "" && this.request !== " ") {
+                        return this.films.filter(el => el.title.toUpperCase().includes(this.request.toUpperCase()));
+                    } else {
+                        return this.films;
+                    }
+                 }
+            },
+            methods: {
+                addFilmToViewed(film) {
+                    if (!this.viewedFilms.find(el => el.title === film.title)) {
+                        this.viewedFilms.push(film);
+                    }
+                    this.showViewed = true;
+
+                    setTimeout(() => {
+                        this.showViewed = false;
+                    }, 500)
+                },
+                deleteFilm({title}){
+                    this.viewedFilms = this.viewedFilms.filter(el => el.title !== title);
+                }
+            },
+            async mounted() {
+                this.films = await fetch("https://swapi.dev/api/films").then(res => res.json()).then(data =>
+                    data.results)
+            }
+        })
+    </script>
+
+</body>
+
+</html>
